@@ -804,16 +804,15 @@
         <div>
           <div class="sidebar-section-title" style="margin-top: 0.5rem;">
             <i data-lucide="dollar-sign" style="width: 14px; height: 14px;"></i>
-            <span>Cost Estimation</span>
+            <span>Exact Session Cost</span>
           </div>
           <div class="config-card" style="padding: 0.75rem; font-size: 0.8rem; display: flex; flex-direction: column; gap: 0.5rem;">
-            <div style="display: flex; justify-content: space-between;">
-              <span style="color: var(--text-muted);">Gemini 1.5 Flash:</span>
-              <span id="costFlash" style="font-weight: 600; color: var(--success); font-family: monospace;">$0.000000</span>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: var(--text-muted); font-weight: 500;">Total Cost:</span>
+              <span id="exactTotalCost" style="font-weight: 700; color: var(--success); font-family: monospace; font-size: 0.95rem;">$0.000000</span>
             </div>
-            <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 0.5rem;">
-              <span style="color: var(--text-muted);">Gemini 1.5 Pro:</span>
-              <span id="costPro" style="font-weight: 600; color: var(--accent); font-family: monospace;">$0.000000</span>
+            <div id="modelCostList" style="border-top: 1px solid var(--border); padding-top: 0.5rem; display: flex; flex-direction: column; gap: 0.4rem;">
+              <div style="text-align: center; color: var(--text-muted); font-style: italic; padding: 0.25rem 0; font-size: 0.75rem;">No active models</div>
             </div>
           </div>
         </div>
@@ -1160,12 +1159,30 @@
               }
             }
 
-            const stepTokenHTML = step.tokens ? `
+            const stepTokenHTML = step.exactUsage ? `
+              <span style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.15); padding: 0.1rem 0.3rem; border-radius: 4px; font-size: 0.65rem; color: var(--success); font-family: monospace;">
+                <i data-lucide="cpu" style="width: 8px; height: 8px;"></i>
+                <span>In: ${step.exactUsage.inputTokens} | Out: ${step.exactUsage.outputTokens} ${step.exactUsage.cachedTokens > 0 ? `(cached: ${step.exactUsage.cachedTokens})` : ''}</span>
+              </span>
+              <span style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.15); padding: 0.1rem 0.3rem; border-radius: 4px; font-size: 0.65rem; color: var(--success); font-family: monospace; font-weight: 600;">
+                <span>$${step.exactUsage.cost.toFixed(6)}</span>
+              </span>
+            ` : (step.tokens ? `
               <span style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 0.1rem 0.3rem; border-radius: 4px; font-size: 0.65rem; color: var(--text-muted);">
                 <i data-lucide="cpu" style="width: 8px; height: 8px;"></i>
-                <span>${step.tokens} tkn</span>
+                <span>${step.tokens} tkn (est)</span>
               </span>
-            ` : '';
+            ` : '');
+
+            const modelHTML = (step.exactUsage && step.exactUsage.model) ? `
+              <span style="font-size: 0.65rem; color: var(--success); background: rgba(16, 185, 129, 0.08); padding: 0.1rem 0.35rem; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.15); font-weight: 600;">
+                ${escapeHtml(step.exactUsage.model)}
+              </span>
+            ` : (step.model ? `
+              <span style="font-size: 0.65rem; color: var(--text-muted); background: rgba(255, 255, 255, 0.05); padding: 0.1rem 0.35rem; border-radius: 4px; border: 1px solid var(--border); font-weight: 500;">
+                ${escapeHtml(step.model)}
+              </span>
+            ` : '');
 
             stepsHTML += `
               <div class="step-row" style="background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem 0.8rem;">
@@ -1178,6 +1195,7 @@
                     </span>
                   </div>
                   <div style="display: flex; align-items: center; gap: 0.4rem;">
+                    ${modelHTML}
                     <span style="font-size: 0.7rem; color: var(--text-muted);">${new Date(step.created_at).toLocaleTimeString()}</span>
                     ${stepTokenHTML}
                   </div>
@@ -1422,32 +1440,51 @@
             }
           }
 
-          const stepTokenHTML = step.tokens ? `
+          const stepTokenHTML = step.exactUsage ? `
+            <span style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.15); padding: 0.1rem 0.3rem; border-radius: 4px; font-size: 0.65rem; color: var(--success); font-family: monospace;">
+              <i data-lucide="cpu" style="width: 8px; height: 8px;"></i>
+              <span>In: ${step.exactUsage.inputTokens} | Out: ${step.exactUsage.outputTokens} ${step.exactUsage.cachedTokens > 0 ? `(cached: ${step.exactUsage.cachedTokens})` : ''}</span>
+            </span>
+            <span style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.15); padding: 0.1rem 0.3rem; border-radius: 4px; font-size: 0.65rem; color: var(--success); font-family: monospace; font-weight: 600;">
+              <span>$${step.exactUsage.cost.toFixed(6)}</span>
+            </span>
+          ` : (step.tokens ? `
             <span style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 0.1rem 0.3rem; border-radius: 4px; font-size: 0.65rem; color: var(--text-muted);">
               <i data-lucide="cpu" style="width: 8px; height: 8px;"></i>
-              <span>${step.tokens} tkn</span>
+              <span>${step.tokens} tkn (est)</span>
             </span>
-          ` : '';
+          ` : '');
 
-          stepsHTML += `
-            <div class="step-row" style="background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem 0.8rem;">
-              <div style="display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                  <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">#${step.step_index}</span>
-                  <span style="display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.15rem 0.4rem; border-radius: 4px; background: ${badgeColor}; color: ${textColor}; font-size: 0.7rem; font-weight: 600; text-transform: uppercase;">
-                    <i data-lucide="${icon}" style="width: 10px; height: 10px;"></i>
-                    <span>${step.type}</span>
-                  </span>
+          const modelHTML = (step.exactUsage && step.exactUsage.model) ? `
+            <span style="font-size: 0.65rem; color: var(--success); background: rgba(16, 185, 129, 0.08); padding: 0.1rem 0.35rem; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.15); font-weight: 600;">
+              ${escapeHtml(step.exactUsage.model)}
+            </span>
+          ` : (step.model ? `
+            <span style="font-size: 0.65rem; color: var(--text-muted); background: rgba(255, 255, 255, 0.05); padding: 0.1rem 0.35rem; border-radius: 4px; border: 1px solid var(--border); font-weight: 500;">
+              ${escapeHtml(step.model)}
+            </span>
+          ` : '');
+
+            stepsHTML += `
+              <div class="step-row" style="background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem 0.8rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">#${step.step_index}</span>
+                    <span style="display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.15rem 0.4rem; border-radius: 4px; background: ${badgeColor}; color: ${textColor}; font-size: 0.7rem; font-weight: 600; text-transform: uppercase;">
+                      <i data-lucide="${icon}" style="width: 10px; height: 10px;"></i>
+                      <span>${step.type}</span>
+                    </span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 0.4rem;">
+                    ${modelHTML}
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">${new Date(step.created_at).toLocaleTimeString()}</span>
+                    ${stepTokenHTML}
+                  </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 0.4rem;">
-                  <span style="font-size: 0.7rem; color: var(--text-muted);">${new Date(step.created_at).toLocaleTimeString()}</span>
-                  ${stepTokenHTML}
-                </div>
+                ${stepDetails}
               </div>
-              ${stepDetails}
-            </div>
-          `;
-        });
+            `;
+          });
         
         stepsHTML += `</div>`;
         stepsContainer.innerHTML = stepsHTML;
@@ -1730,10 +1767,65 @@
       if (data && data.tokens) {
         updateDonutChart(data.tokens.input || 0, data.tokens.output || 0, data.tokens.tool || 0);
         
-        // Calculate cost
-        const costs = getEstimatedCost(data.tokens.input || 0, data.tokens.output || 0);
-        document.getElementById('costFlash').textContent = `$${costs.flash.toFixed(6)}`;
-        document.getElementById('costPro').textContent = `$${costs.pro.toFixed(6)}`;
+        // Exact cost calculation from exactUsage
+        if (data.exactUsage && data.exactUsage.supported) {
+          const usage = data.exactUsage;
+          document.getElementById('exactTotalCost').textContent = `$${usage.totalCost.toFixed(6)}`;
+          
+          // Group calls by model
+          const modelGroup = {};
+          (usage.calls || []).forEach(call => {
+            if (!modelGroup[call.model]) {
+              modelGroup[call.model] = {
+                inputTokens: 0,
+                outputTokens: 0,
+                cachedTokens: 0,
+                cost: 0
+              };
+            }
+            modelGroup[call.model].inputTokens += call.inputTokens;
+            modelGroup[call.model].outputTokens += call.outputTokens;
+            modelGroup[call.model].cachedTokens += call.cachedTokens;
+            modelGroup[call.model].cost += call.cost;
+          });
+          
+          const modelKeys = Object.keys(modelGroup);
+          if (modelKeys.length > 0) {
+            document.getElementById('modelCostList').innerHTML = modelKeys.map(model => {
+              const stats = modelGroup[model];
+              return `
+                <div style="display: flex; flex-direction: column; font-size: 0.75rem; background: rgba(255,255,255,0.01); border: 1px solid var(--border); padding: 0.4rem; border-radius: 4px; gap: 0.15rem;">
+                  <div style="display: flex; justify-content: space-between; font-weight: 600; color: var(--text);">
+                    <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 130px;" title="${model}">${model}</span>
+                    <span style="font-family: monospace; color: var(--success);">$${stats.cost.toFixed(6)}</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--text-muted);">
+                    <span>In: ${stats.inputTokens} | Out: ${stats.outputTokens}</span>
+                    ${stats.cachedTokens > 0 ? `<span>(Cached: ${stats.cachedTokens})</span>` : ''}
+                  </div>
+                </div>
+              `;
+            }).join('');
+          } else {
+            document.getElementById('modelCostList').innerHTML = `
+              <div style="text-align: center; color: var(--text-muted); font-style: italic; padding: 0.25rem 0; font-size: 0.75rem;">No active models</div>
+            `;
+          }
+        } else {
+          // Fallback to estimation if exactUsage not available
+          const costs = getEstimatedCost(data.tokens.input || 0, data.tokens.output || 0);
+          document.getElementById('exactTotalCost').textContent = `$${costs.flash.toFixed(6)} (est)`;
+          document.getElementById('modelCostList').innerHTML = `
+            <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+              <span style="color: var(--text-muted);">Flash (Est):</span>
+              <span style="font-family: monospace; color: var(--success); font-weight: 600;">$${costs.flash.toFixed(6)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; border-top: 1px dashed var(--border); padding-top: 0.25rem; margin-top: 0.25rem;">
+              <span style="color: var(--text-muted);">Pro (Est):</span>
+              <span style="font-family: monospace; color: var(--accent); font-weight: 600;">$${costs.pro.toFixed(6)}</span>
+            </div>
+          `;
+        }
         
         // Update top resource steps
         updateTopSteps(data.steps || []);
@@ -1742,8 +1834,10 @@
         updateOptimizationTips(data.tokens.input || 0, data.tokens.output || 0, data.tokens.tool || 0, data.steps || []);
       } else {
         updateDonutChart(0, 0, 0);
-        document.getElementById('costFlash').textContent = '$0.000000';
-        document.getElementById('costPro').textContent = '$0.000000';
+        document.getElementById('exactTotalCost').textContent = '$0.000000';
+        document.getElementById('modelCostList').innerHTML = `
+          <div style="text-align: center; color: var(--text-muted); font-style: italic; padding: 0.25rem 0; font-size: 0.75rem;">No active models</div>
+        `;
         updateTopSteps([]);
         updateOptimizationTips(0, 0, 0, []);
       }
@@ -1795,10 +1889,21 @@
       });
     }
 
-    function saveToHistory(prompt, conversationId) {
+    function saveToHistory(prompt, conversationId, modelName) {
+      if (!modelName) {
+        const select = document.getElementById('modelSelect');
+        if (select && select.selectedIndex >= 0) {
+          modelName = select.options[select.selectedIndex].text;
+        }
+      }
       // Avoid duplicates in recent runs
       recentRuns = recentRuns.filter(run => run.conversationId !== conversationId);
-      recentRuns.unshift({ prompt, conversationId, date: new Date().toLocaleTimeString() });
+      recentRuns.unshift({ 
+        prompt, 
+        conversationId, 
+        date: new Date().toLocaleTimeString(),
+        model: modelName 
+      });
       if (recentRuns.length > 5) recentRuns.pop();
       localStorage.setItem('agy_recent_runs', JSON.stringify(recentRuns));
       updateHistoryList();
@@ -1822,11 +1927,19 @@
       })
       .then(data => {
         if (data.success && data.conversations && data.conversations.length > 0) {
-          list.innerHTML = data.conversations.map(run => `
-            <div class="history-item" data-conv-id="${run.conversationId}" data-prompt="${escapeHtml(run.prompt)}" title="Click to load: ${escapeHtml(run.prompt.substring(0, 120))}${run.prompt.length > 120 ? '...' : ''}">
-              <strong>${run.date}</strong>: ${escapeHtml(cleanPrompt(run.prompt))}
-            </div>
-          `).join('');
+          list.innerHTML = data.conversations.map(run => {
+            const modelBadge = run.model ? `
+              <span style="font-size: 0.65rem; color: var(--primary); background: rgba(139, 92, 246, 0.08); padding: 0.1rem 0.3rem; border-radius: 4px; border: 1px solid rgba(139, 92, 246, 0.15); font-weight: 500; display: inline-block; margin-left: 0.25rem; vertical-align: middle;">
+                ${escapeHtml(run.model)}
+              </span>
+            ` : '';
+            return `
+              <div class="history-item" data-conv-id="${run.conversationId}" data-prompt="${escapeHtml(run.prompt)}" title="Click to load: ${escapeHtml(run.prompt.substring(0, 120))}${run.prompt.length > 120 ? '...' : ''}">
+                <strong>${run.date}</strong>: ${escapeHtml(cleanPrompt(run.prompt))}
+                ${modelBadge}
+              </div>
+            `;
+          }).join('');
           bindHistoryClicks();
         } else {
           renderLocalHistory(list);
@@ -1842,11 +1955,19 @@
         list.innerHTML = `<div class="text-muted" style="font-size: 0.8rem; font-style: italic;">No recent runs</div>`;
         return;
       }
-      list.innerHTML = recentRuns.map(run => `
-        <div class="history-item" data-conv-id="${run.conversationId || ''}" data-prompt="${escapeHtml(run.prompt)}" title="Click to load: ${escapeHtml(run.prompt.substring(0, 120))}${run.prompt.length > 120 ? '...' : ''}">
-          <strong>${run.date}</strong>: ${escapeHtml(cleanPrompt(run.prompt))}
-        </div>
-      `).join('');
+      list.innerHTML = recentRuns.map(run => {
+        const modelBadge = run.model ? `
+          <span style="font-size: 0.65rem; color: var(--primary); background: rgba(139, 92, 246, 0.08); padding: 0.1rem 0.3rem; border-radius: 4px; border: 1px solid rgba(139, 92, 246, 0.15); font-weight: 500; display: inline-block; margin-left: 0.25rem; vertical-align: middle;">
+            ${escapeHtml(run.model)}
+          </span>
+        ` : '';
+        return `
+          <div class="history-item" data-conv-id="${run.conversationId || ''}" data-prompt="${escapeHtml(run.prompt)}" title="Click to load: ${escapeHtml(run.prompt.substring(0, 120))}${run.prompt.length > 120 ? '...' : ''}">
+            <strong>${run.date}</strong>: ${escapeHtml(cleanPrompt(run.prompt))}
+            ${modelBadge}
+          </div>
+        `;
+      }).join('');
       bindHistoryClicks();
     }
 
@@ -1864,6 +1985,18 @@
       })
       .then(data => {
         if (data.success && data.quotas) {
+          // Update model select dropdown
+          const modelSelect = document.getElementById('modelSelect');
+          if (modelSelect) {
+            const currentSelected = modelSelect.value;
+            modelSelect.innerHTML = data.quotas.map(item => `
+              <option value="${item.id}">${item.name}</option>
+            `).join('');
+            if (currentSelected && data.quotas.some(q => q.id === currentSelected)) {
+              modelSelect.value = currentSelected;
+            }
+          }
+
           const container = document.getElementById('modelQuotaContainer');
           if (!container) return;
           

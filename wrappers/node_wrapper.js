@@ -51,22 +51,53 @@ async function getLatestConversationId() {
 }
 
 /**
+ * Helper to resolve path to the log/transcript file (overview.txt first, fallback to transcript.jsonl)
+ */
+async function getTranscriptPath(brainDir, conversationId) {
+  const overviewPath = path.join(
+    brainDir,
+    conversationId,
+    '.system_generated/logs/overview.txt'
+  );
+  try {
+    await fs.access(overviewPath);
+    return overviewPath;
+  } catch {
+    return path.join(
+      brainDir,
+      conversationId,
+      '.system_generated/logs/transcript.jsonl'
+    );
+  }
+}
+
+/**
  * Reads and parses transcript JSONL file
  */
 async function getTranscript(conversationId) {
   if (!conversationId) return [];
   const brainDir = await getBrainDir();
-  const transcriptPath = path.join(
-    brainDir,
-    conversationId,
-    '.system_generated/logs/transcript.jsonl'
-  );
   try {
+    const transcriptPath = await getTranscriptPath(brainDir, conversationId);
     const data = await fs.readFile(transcriptPath, 'utf8');
-    return data
+    const steps = data
       .split('\n')
       .filter(line => line.trim() !== '')
       .map(line => JSON.parse(line));
+
+    // Trace and inject model attribution per step
+    let activeModel = 'Gemini 3.5 Flash (Medium)'; // Default fallback
+    steps.forEach(step => {
+      if (step.type === 'USER_INPUT' && step.content) {
+        const match = step.content.match(/<USER_SETTINGS_CHANGE>[\s\S]*?Model Selection` from \S+ to ([^.]+)\./);
+        if (match) {
+          activeModel = match[1].trim();
+        }
+      }
+      step.model = activeModel;
+    });
+
+    return steps;
   } catch (err) {
     console.error(`Error reading transcript for ${conversationId}:`, err);
     return [];
@@ -258,28 +289,42 @@ export async function listConversations(limit = 10) {
     const results = [];
     for (const d of sliced) {
       try {
-        const transcriptPath = path.join(brainDir, d.id, '.system_generated/logs/transcript.jsonl');
+        const transcriptPath = await getTranscriptPath(brainDir, d.id);
         const data = await fs.readFile(transcriptPath, 'utf8');
         const lines = data.split('\n').filter(Boolean);
         let prompt = `Session ${d.id.substring(0, 8)}`;
+        let lastModel = 'Gemini 3.5 Flash (Medium)';
         if (lines.length > 0) {
           const firstStep = JSON.parse(lines[0]);
           if (firstStep.type === 'USER_INPUT' && firstStep.content) {
             prompt = firstStep.content;
+          }
+          for (const line of lines) {
+            try {
+              const step = JSON.parse(line);
+              if (step.type === 'USER_INPUT' && step.content) {
+                const match = step.content.match(/<USER_SETTINGS_CHANGE>[\s\S]*?Model Selection` from \S+ to ([^.]+)\./);
+                if (match) {
+                  lastModel = match[1].trim();
+                }
+              }
+            } catch (e) {}
           }
         }
         results.push({
           conversationId: d.id,
           prompt,
           mtime: d.mtime,
-          date: new Date(d.mtime).toLocaleTimeString()
+          date: new Date(d.mtime).toLocaleTimeString(),
+          model: lastModel
         });
       } catch {
         results.push({
           conversationId: d.id,
           prompt: `Session ${d.id.substring(0, 8)}`,
           mtime: d.mtime,
-          date: new Date(d.mtime).toLocaleTimeString()
+          date: new Date(d.mtime).toLocaleTimeString(),
+          model: 'Gemini 3.5 Flash (Medium)'
         });
       }
     }
