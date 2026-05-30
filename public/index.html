@@ -838,7 +838,10 @@
       isExecuting = true;
       document.getElementById('sendBtn').disabled = true;
       document.getElementById('promptInput').disabled = true;
-      document.getElementById('emptyState').style.display = 'none';
+      const emptyState = document.getElementById('emptyState');
+      if (emptyState) {
+        emptyState.style.display = 'none';
+      }
       document.getElementById('statusIndicator').style.display = 'flex';
 
       // Start timer
