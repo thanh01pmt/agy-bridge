@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "../gemini-proxy-worker"
+		},
+		{
+			"path": "."
+		}
+	],
+	"settings": {}
+}

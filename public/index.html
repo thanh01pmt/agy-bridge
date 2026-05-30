@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Antigravity CLI Bridge Playground</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Marked for Markdown Rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Highlight.js for Code Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  
+  <style>
+    :root {
+      --bg-dark: #09090b;
+      --bg-card: #18181b;
+      --bg-input: #27272a;
+      --text-main: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --primary: #8b5cf6;
+      --primary-hover: #7c3aed;
+      --primary-glow: rgba(139, 92, 246, 0.35);
+      --accent: #06b6d4;
+      --border: #3f3f46;
+      --error: #ef4444;
+      --success: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Auth Screen */
+    .auth-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-grow: 1;
+      padding: 2rem;
+    }
+
+    .auth-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      text-align: center;
+    }
+
+    .auth-logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+
+    .auth-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(to right, #ffffff, #a1a1aa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .auth-desc {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+    }
+
+    .input-group {
+      text-align: left;
+      margin-bottom: 1.5rem;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .input-field {
+      width: 100%;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      color: white;
+      font-family: inherit;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    .btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px var(--primary-glow);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .auth-error {
+      color: var(--error);
+      font-size: 0.85rem;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    /* Main App Layout */
+    .app-container {
+      display: none;
+      flex-direction: column;
+      flex-grow: 1;
+      height: 100vh;
+      max-height: 100vh;
+    }
+
+    .header {
+      background-color: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-logo-container {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .header-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .header-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .logout-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 6px;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+    }
+
+    .logout-btn:hover {
+      color: var(--text-main);
+      border-color: var(--text-muted);
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Workspace Panel */
+    .workspace {
+      display: flex;
+      flex-grow: 1;
+      overflow: hidden;
+    }
+
+    /* Sidebar / Configuration */
+    .sidebar {
+      width: 320px;
+      background-color: var(--bg-card);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      overflow-y: auto;
+    }
+
+    .sidebar-section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .config-card {
+      background-color: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    .switch-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .switch-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--border);
+      transition: .3s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--primary);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Main Console / Input-Output */
+    .console {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--bg-dark);
+      overflow: hidden;
+    }
+
+    .output-area {
+      flex-grow: 1;
+      padding: 2rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      scroll-behavior: smooth;
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-grow: 1;
+      color: var(--text-muted);
+      text-align: center;
+      gap: 1rem;
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .response-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    }
+
+    .response-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .response-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.25rem 0.6rem;
+      border-radius: 20px;
+      background-color: rgba(139, 92, 246, 0.1);
+      color: var(--primary);
+      border: 1px solid rgba(139, 92, 246, 0.2);
+    }
+
+    .response-meta {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 1rem;
+    }
+
+    .markdown-body {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: #e4e4e7;
+    }
+
+    .markdown-body p {
+      margin-bottom: 1rem;
+    }
+
+    .markdown-body p:last-child {
+      margin-bottom: 0;
+    }
+
+    .markdown-body pre {
+      background-color: #0c0c0e;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+
+    .markdown-body code {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85em;
+      background-color: #27272a;
+      padding: 0.2em 0.4em;
+      border-radius: 4px;
+    }
+
+    .markdown-body pre code {
+      background-color: transparent;
+      padding: 0;
+      border-radius: 0;
+    }
+
+    .markdown-body ul, .markdown-body ol {
+      margin-bottom: 1rem;
+      padding-left: 1.5rem;
+    }
+
+    .markdown-body li {
+      margin-bottom: 0.25rem;
+    }
+
+    /* Input Dock */
+    .input-dock {
+      background-color: var(--bg-card);
+      border-top: 1px solid var(--border);
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .input-container {
+      display: flex;
+      gap: 1rem;
+      position: relative;
+    }
+
+    .prompt-textarea {
+      flex-grow: 1;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+      color: white;
+      font-family: inherit;
+      font-size: 0.95rem;
+      resize: none;
+      height: 56px;
+      transition: all 0.2s ease;
+      line-height: 1.4;
+    }
+
+    .prompt-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    .send-btn {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    .send-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .send-btn:disabled {
+      background: var(--border);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    /* Spinner / Status */
+    .status-indicator {
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* History list in sidebar */
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      background-color: rgba(255, 255, 255, 0.01);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.6rem 0.8rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    .history-item:hover {
+      background-color: rgba(255, 255, 255, 0.03);
+      border-color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Auth Screen -->
+  <div id="authScreen" class="auth-container">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <i data-lucide="terminal" style="width: 32px; height: 32px;"></i>
+      </div>
+      <h1 class="auth-title">Antigravity Console</h1>
+      <p class="auth-desc">Enter your secret key to access the playground</p>
+      
+      <div class="input-group">
+        <label class="input-label">Secret Key</label>
+        <input type="password" id="secretInput" class="input-field" placeholder="Enter X-Bridge-Secret">
+      </div>
+      
+      <button onclick="handleLogin()" class="btn">
+        <span>Authenticate</span>
+        <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
+      </button>
+      
+      <div id="authError" class="auth-error">Invalid Secret Key. Please try again.</div>
+    </div>
+  </div>
+
+  <!-- Main App Console -->
+  <div id="appScreen" class="app-container">
+    <div class="header">
+      <div class="header-logo-container">
+        <div class="header-logo">
+          <i data-lucide="terminal" style="width: 16px; height: 16px;"></i>
+        </div>
+        <span class="header-title">Antigravity Playground</span>
+      </div>
+      <button onclick="handleLogout()" class="logout-btn">
+        <i data-lucide="log-out" style="width: 14px; height: 14px;"></i>
+        <span>Logout</span>
+      </button>
+    </div>
+
+    <div class="workspace">
+      <!-- Sidebar / Config -->
+      <div class="sidebar">
+        <div>
+          <div class="sidebar-section-title">
+            <i data-lucide="settings" style="width: 14px; height: 14px;"></i>
+            <span>Configuration</span>
+          </div>
+          <div class="config-card">
+            <div class="switch-container" onclick="toggleSwitch('skipPermissions')">
+              <span class="switch-label">Skip Permissions</span>
+              <label class="switch">
+                <input type="checkbox" id="skipPermissions" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            
+            <div class="switch-container" onclick="toggleSwitch('sandboxMode')" style="margin-top: 0.75rem; border-top: 1px solid var(--border); padding-top: 0.75rem;">
+               <span class="switch-label">Sandbox Mode</span>
+               <label class="switch">
+                 <input type="checkbox" id="sandboxMode">
+                 <span class="slider"></span>
+               </label>
+             </div>
+
+             <div class="switch-container" onclick="toggleSwitch('globalCollapseLogs')" style="margin-top: 0.75rem; border-top: 1px solid var(--border); padding-top: 0.75rem;">
+               <span class="switch-label">Collapse All Logs</span>
+               <label class="switch">
+                 <input type="checkbox" id="globalCollapseLogs" onchange="handleGlobalCollapseToggle(this.checked)">
+                 <span class="slider"></span>
+               </label>
+             </div>
+           </div>
+         </div>
+
+        <div>
+          <div class="sidebar-section-title">
+            <i data-lucide="cpu" style="width: 14px; height: 14px;"></i>
+            <span>Model Selection</span>
+          </div>
+          <div class="config-card" style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <select id="modelSelect" class="input-field" style="width: 100%; border-radius: 6px; padding: 0.4rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text); font-size: 0.85rem; cursor: pointer; outline: none;">
+              <option value="gemini-3.5-flash-medium">Gemini 3.5 Flash (Medium)</option>
+              <option value="gemini-3.5-flash-high">Gemini 3.5 Flash (High)</option>
+              <option value="gemini-3.5-flash-low">Gemini 3.5 Flash (Low)</option>
+              <option value="gemini-3.1-pro-low">Gemini 3.1 Pro (Low)</option>
+              <option value="gemini-3.1-pro-high">Gemini 3.1 Pro (High)</option>
+              <option value="claude-sonnet-4.6">Claude Sonnet 4.6 (Thinking)</option>
+              <option value="claude-opus-4.6">Claude Opus 4.6 (Thinking)</option>
+              <option value="gpt-oss-120b">GPT-OSS 120B (Medium)</option>
+            </select>
+            <div style="font-size: 0.65rem; color: var(--text-muted); font-style: italic; line-height: 1.3;">
+              * Note: CLI model is determined by your Antigravity Google Account sync.
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="sidebar-section-title">
+            <i data-lucide="activity" style="width: 14px; height: 14px;"></i>
+            <span>Model Quota</span>
+          </div>
+          <div class="config-card" id="modelQuotaContainer" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 0.75rem; max-height: 140px; overflow-y: auto;">
+            <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 0.5rem 0;">
+              Loading quota data...
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="sidebar-section-title">
+            <i data-lucide="message-square" style="width: 14px; height: 14px;"></i>
+            <span>Session Options</span>
+          </div>
+          <div class="input-group" style="margin-bottom: 0;">
+            <label class="input-label">Conversation ID</label>
+            <div style="display: flex; gap: 0.4rem; width: 100%;">
+              <input type="text" id="conversationIdInput" class="input-field" placeholder="Optional ID to resume" style="flex-grow: 1; font-family: monospace;">
+              <button id="loadConvBtn" style="background: var(--primary); border: none; color: white; border-radius: 6px; padding: 0.4rem 0.8rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.2rem; transition: background 0.2s;" onclick="loadConversationHistory()">
+                <i data-lucide="download" style="width: 12px; height: 12px;"></i>
+                <span>Load</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="sidebar-section-title">
+            <i data-lucide="history" style="width: 14px; height: 14px;"></i>
+            <span>Recent Runs</span>
+          </div>
+          <div id="historyList" class="history-list">
+            <div class="text-muted" style="font-size: 0.8rem; font-style: italic;">No recent runs</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Console Area -->
+      <div class="console">
+        <div id="outputArea" class="output-area">
+          <div id="emptyState" class="empty-state">
+            <i data-lucide="zap" style="width: 48px; height: 48px;"></i>
+            <h3>No Active Task</h3>
+            <p style="font-size: 0.9rem; max-width: 320px;">Type a prompt below to delegate a development or research task to the Antigravity Agent.</p>
+          </div>
+        </div>
+
+        <!-- Input Dock -->
+        <div class="input-dock">
+          <div id="statusIndicator" class="status-indicator">
+            <div class="spinner"></div>
+            <span id="statusText">Executing Antigravity agent...</span>
+            <span id="timerText" style="font-family: monospace; font-weight: 600;">0.0s</span>
+          </div>
+          
+          <div class="input-container">
+            <textarea id="promptInput" class="prompt-textarea" placeholder="Ask Antigravity to do something (e.g. 'say hello' or write some code)..." onkeydown="handleKeyDown(event)"></textarea>
+            <button id="sendBtn" onclick="submitTask()" class="send-btn">
+              <i data-lucide="play" style="width: 20px; height: 20px;"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // App State
+    let secretKey = localStorage.getItem('agy_bridge_secret') || '';
+    let isExecuting = false;
+    let timerInterval = null;
+    let quotaInterval = null;
+    let secondsElapsed = 0;
+    let recentRuns = JSON.parse(localStorage.getItem('agy_recent_runs') || '[]');
+
+    // Marked options for markdown output rendering
+    marked.setOptions({
+      highlight: function(code, lang) {
+        if (lang && hljs.getLanguage(lang)) {
+          try {
+            return hljs.highlight(code, { language: lang }).value;
+          } catch (__) {}
+        }
+        return code; // Use external default escaping
+      }
+    });
+
+    // Check auth on load
+    if (secretKey) {
+      showAppScreen();
+    } else {
+      showAuthScreen();
+    }
+
+    function showAuthScreen() {
+      document.getElementById('authScreen').style.display = 'flex';
+      document.getElementById('appScreen').style.display = 'none';
+      document.getElementById('secretInput').focus();
+    }
+
+    function showAppScreen() {
+      document.getElementById('authScreen').style.display = 'none';
+      document.getElementById('appScreen').style.display = 'flex';
+      
+      // Initialize global collapse toggle state
+      const savedCollapse = localStorage.getItem('agy_global_collapse_logs') === 'true';
+      document.getElementById('globalCollapseLogs').checked = savedCollapse;
+
+      updateHistoryList();
+      updateModelQuotas();
+      if (quotaInterval) clearInterval(quotaInterval);
+      quotaInterval = setInterval(updateModelQuotas, 30000);
+    }
+
+    function handleLogin() {
+      const inputVal = document.getElementById('secretInput').value.trim();
+      if (!inputVal) return;
+      
+      // Simple validation checking via health endpoint
+      document.getElementById('authError').style.display = 'none';
+      
+      fetch('/api/verify', {
+        headers: {
+          'X-Bridge-Secret': inputVal
+        }
+      })
+      .then(res => {
+        if (res.status === 401) {
+          throw new Error('Unauthorized');
+        }
+        return res.json();
+      })
+      .then(() => {
+        secretKey = inputVal;
+        localStorage.setItem('agy_bridge_secret', secretKey);
+        showAppScreen();
+      })
+      .catch(err => {
+        document.getElementById('authError').textContent = 'Invalid secret key or server unreachable.';
+        document.getElementById('authError').style.display = 'block';
+      });
+    }
+
+    function handleLogout() {
+      secretKey = '';
+      localStorage.removeItem('agy_bridge_secret');
+      if (quotaInterval) {
+        clearInterval(quotaInterval);
+        quotaInterval = null;
+      }
+      showAuthScreen();
+    }
+
+    function toggleSwitch(id) {
+      const checkbox = document.getElementById(id);
+      checkbox.checked = !checkbox.checked;
+      if (id === 'globalCollapseLogs') {
+        handleGlobalCollapseToggle(checkbox.checked);
+      }
+    }
+
+    function handleKeyDown(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        submitTask();
+      }
+    }
+
+    function submitTask() {
+      const prompt = document.getElementById('promptInput').value.trim();
+      if (!prompt || isExecuting) return;
+
+      isExecuting = true;
+      document.getElementById('sendBtn').disabled = true;
+      document.getElementById('promptInput').disabled = true;
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('statusIndicator').style.display = 'flex';
+
+      // Start timer
+      secondsElapsed = 0;
+      document.getElementById('timerText').textContent = '0.0s';
+      timerInterval = setInterval(() => {
+        secondsElapsed += 0.1;
+        document.getElementById('timerText').textContent = `${secondsElapsed.toFixed(1)}s`;
+      }, 100);
+
+      const skipPermissions = document.getElementById('skipPermissions').checked;
+      const sandboxMode = document.getElementById('sandboxMode').checked;
+      const conversationId = document.getElementById('conversationIdInput').value.trim() || null;
+
+      // Add temporary UI item for response
+      const outputArea = document.getElementById('outputArea');
+      const responseCard = document.createElement('div');
+      responseCard.className = 'response-card';
+      responseCard.innerHTML = `
+        <div class="response-header">
+          <div style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            <span class="response-badge">
+              <i data-lucide="terminal" style="width: 12px; height: 12px;"></i>
+              <span>AGY Task</span>
+            </span>
+            <span class="prompt-preview" style="font-weight: 600; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">"${prompt.length > 50 ? prompt.substring(0, 50) + '...' : prompt}"</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0;">
+            <div class="response-meta">
+              <span class="run-time"><i data-lucide="clock" style="width: 12px; height: 12px; display: inline; vertical-align: middle; margin-right: 3px;"></i>Running...</span>
+            </div>
+            <button class="toggle-meta-btn" style="display: none; background: transparent; border: 1px solid var(--border); color: var(--text-muted); border-radius: 6px; padding: 0.25rem 0.5rem; font-size: 0.75rem; cursor: pointer; align-items: center; gap: 0.25rem; transition: all 0.2s;" onclick="toggleCardMetadata(this)">
+              <i data-lucide="eye-off" style="width: 12px; height: 12px;"></i>
+              <span>Hide Logs</span>
+            </button>
+          </div>
+        </div>
+        <div class="markdown-body" id="loadingText">Processing prompt... This can take up to 20-30 seconds depending on agent steps.</div>
+      `;
+      outputArea.appendChild(responseCard);
+      outputArea.scrollTop = outputArea.scrollHeight;
+      lucide.createIcons();
+
+      fetch('/api/agent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Bridge-Secret': secretKey
+        },
+        body: JSON.stringify({
+          prompt,
+          dangerouslySkipPermissions: skipPermissions,
+          conversationId,
+          sandbox: sandboxMode
+        })
+      })
+      .then(res => {
+        if (!res.ok) {
+          return res.json().then(data => { throw new Error(data.error || 'Server error') });
+        }
+        return res.json();
+      })
+      .then(data => {
+        clearInterval(timerInterval);
+        document.getElementById('loadingText').id = ''; // remove loading tag
+        const mdDiv = responseCard.querySelector('.markdown-body');
+        mdDiv.innerHTML = marked.parse(data.output || '*No output returned*');
+        
+        // Apply code highlight
+        mdDiv.querySelectorAll('pre code').forEach((el) => {
+          hljs.highlightElement(el);
+        });
+
+        // Update card meta
+        const tokensHTML = data.tokens ? `
+          <span style="display: inline-flex; align-items: center; gap: 0.25rem; background: rgba(16, 185, 129, 0.08); color: var(--success); padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; border: 1px solid rgba(16, 185, 129, 0.15);">
+            <i data-lucide="cpu" style="width: 12px; height: 12px;"></i>
+            <span>${data.tokens.total} tokens (In: ${data.tokens.input} | Out: ${data.tokens.output} | Tool: ${data.tokens.tool})</span>
+          </span>
+        ` : '';
+
+        responseCard.querySelector('.response-meta').innerHTML = `
+          <span>Conv ID: ${data.conversationId || 'N/A'}</span>
+          <span>Duration: ${secondsElapsed.toFixed(1)}s</span>
+          <span>Status: Success</span>
+          ${tokensHTML}
+        `;
+
+        if (data.conversationId) {
+          responseCard.setAttribute('data-conversation-id', data.conversationId);
+        }
+
+        // Show the toggle logs button
+        const toggleBtn = responseCard.querySelector('.toggle-meta-btn');
+        if (toggleBtn) {
+          toggleBtn.style.display = 'inline-flex';
+        }
+
+        // Render steps trajectory if present
+        if (data.steps && data.steps.length > 0) {
+          const stepsContainer = document.createElement('div');
+          stepsContainer.className = 'steps-trajectory';
+          stepsContainer.style.marginTop = '1.5rem';
+          stepsContainer.style.borderTop = '1px dashed var(--border)';
+          stepsContainer.style.paddingTop = '1rem';
+          
+          let stepsHTML = `
+            <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between; width: 100%;">
+              <div style="display: flex; align-items: center; gap: 0.4rem;">
+                <i data-lucide="git-commit" style="width: 14px; height: 14px;"></i>
+                <span>Agent Trajectory (${data.steps.length} Steps)</span>
+              </div>
+              <button class="toggle-trajectory-btn" style="background: transparent; border: 1px solid var(--border); color: var(--text-muted); font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 0.2rem; padding: 0.2rem 0.4rem; border-radius: 4px; transition: background 0.2s;" onclick="toggleTrajectory(this)">
+                <i data-lucide="chevron-up" style="width: 12px; height: 12px;"></i>
+                <span>Hide</span>
+              </button>
+            </div>
+            <div class="steps-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
+          `;
+          
+          data.steps.forEach(step => {
+            let icon = 'info';
+            let badgeColor = 'rgba(255, 255, 255, 0.05)';
+            let textColor = 'var(--text-muted)';
+            
+            if (step.type === 'USER_INPUT') {
+              icon = 'user';
+              badgeColor = 'rgba(6, 182, 212, 0.1)';
+              textColor = 'var(--accent)';
+            } else if (step.type === 'PLANNER_RESPONSE') {
+              icon = 'brain';
+              badgeColor = 'rgba(139, 92, 246, 0.1)';
+              textColor = 'var(--primary)';
+            } else if (step.type.includes('SEARCH') || step.type.includes('GREP') || step.type.includes('VIEW_FILE')) {
+              icon = 'search';
+              badgeColor = 'rgba(16, 185, 129, 0.1)';
+              textColor = 'var(--success)';
+            } else if (step.type.includes('RUN_COMMAND') || step.type.includes('COMMAND')) {
+              icon = 'terminal';
+              badgeColor = 'rgba(239, 68, 68, 0.1)';
+              textColor = 'var(--error)';
+            }
+
+            let stepDetails = '';
+            if (step.tool_calls && step.tool_calls.length > 0) {
+              stepDetails = step.tool_calls.map(tc => {
+                const action = tc.args && tc.args.toolAction ? tc.args.toolAction.replace(/"/g, '') : `Calling ${tc.name}`;
+                const argsStr = tc.args ? JSON.stringify(tc.args, null, 2) : '';
+                const hasArgs = argsStr.length > 0;
+                
+                return `
+                  <div class="tool-call-box" style="margin-top: 0.25rem;">
+                    <div style="font-family: monospace; font-size: 0.8rem; background: #0c0c0e; border: 1px solid var(--border); padding: 0.4rem 0.6rem; border-radius: 4px; color: #a78bfa; display: flex; justify-content: space-between; align-items: center; ${hasArgs ? 'cursor: pointer;' : ''}" ${hasArgs ? 'onclick="toggleToolArgs(this)"' : ''}>
+                      <span>⚡ ${action}</span>
+                      ${hasArgs ? '<span style="font-size: 0.65rem; color: var(--primary); text-decoration: underline; font-weight: 500;">Details</span>' : ''}
+                    </div>
+                    ${hasArgs ? `<pre class="tool-args-pre" style="display: none; font-size: 0.75rem; background: #050507; border: 1px solid var(--border); border-top: none; padding: 0.5rem; margin: 0; border-radius: 0 0 4px 4px; overflow-x: auto; color: #818cf8;">${argsStr}</pre>` : ''}
+                  </div>
+                `;
+              }).join('');
+            } else if (step.content) {
+              const needsTruncation = step.content.length > 150;
+              if (needsTruncation) {
+                const preview = step.content.substring(0, 150) + '...';
+                stepDetails = `
+                  <div class="step-content-box" style="margin-top: 0.25rem; cursor: pointer;" onclick="toggleStepContent(this)">
+                    <div class="preview-text" style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; background: rgba(0,0,0,0.1); padding: 0.4rem 0.6rem; border-radius: 4px;">
+                      ${preview}
+                      <span style="display: block; font-size: 0.65rem; color: var(--primary); text-decoration: underline; margin-top: 0.2rem; font-style: normal; font-weight: 600;">Show more</span>
+                    </div>
+                    <div class="full-text" style="display: none; font-size: 0.8rem; color: var(--text); background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 0.6rem 0.8rem; border-radius: 4px; white-space: pre-wrap; font-family: monospace; line-height: 1.4;">${step.content}<span style="display: block; font-size: 0.65rem; color: var(--primary); text-decoration: underline; margin-top: 0.4rem; font-style: normal; font-weight: 600;">Show less</span></div>
+                  </div>
+                `;
+              } else {
+                stepDetails = `<div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; background: rgba(0,0,0,0.1); padding: 0.4rem 0.6rem; border-radius: 4px; margin-top: 0.25rem; white-space: pre-wrap;">${step.content}</div>`;
+              }
+            }
+
+            const stepTokenHTML = step.tokens ? `
+              <span style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 0.1rem 0.3rem; border-radius: 4px; font-size: 0.65rem; color: var(--text-muted);">
+                <i data-lucide="cpu" style="width: 8px; height: 8px;"></i>
+                <span>${step.tokens} tkn</span>
+              </span>
+            ` : '';
+
+            stepsHTML += `
+              <div class="step-row" style="background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem 0.8rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">#${step.step_index}</span>
+                    <span style="display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.15rem 0.4rem; border-radius: 4px; background: ${badgeColor}; color: ${textColor}; font-size: 0.7rem; font-weight: 600; text-transform: uppercase;">
+                      <i data-lucide="${icon}" style="width: 10px; height: 10px;"></i>
+                      <span>${step.type}</span>
+                    </span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 0.4rem;">
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">${new Date(step.created_at).toLocaleTimeString()}</span>
+                    ${stepTokenHTML}
+                  </div>
+                </div>
+                ${stepDetails}
+              </div>
+            `;
+          });
+          
+          stepsHTML += `</div>`;
+          stepsContainer.innerHTML = stepsHTML;
+          responseCard.appendChild(stepsContainer);
+          
+          // Apply global collapse preference
+          const globalCollapse = document.getElementById('globalCollapseLogs').checked;
+          if (globalCollapse) {
+            const meta = responseCard.querySelector('.response-meta');
+            const trajectory = responseCard.querySelector('.steps-trajectory');
+            const toggleBtn = responseCard.querySelector('.toggle-meta-btn');
+            if (meta) meta.style.display = 'none';
+            if (trajectory) trajectory.style.display = 'none';
+            if (toggleBtn) {
+              toggleBtn.innerHTML = `<i data-lucide="eye" style="width: 12px; height: 12px;"></i><span>Show Logs</span>`;
+            }
+          }
+          
+          lucide.createIcons();
+        }
+
+        // Save to history
+        saveToHistory(prompt, data.conversationId);
+      })
+      .catch(err => {
+        clearInterval(timerInterval);
+        const mdDiv = responseCard.querySelector('#loadingText') || responseCard.querySelector('.markdown-body');
+        mdDiv.id = '';
+        mdDiv.innerHTML = `<span style="color: var(--error)">Error: ${err.message}</span>`;
+        responseCard.querySelector('.response-meta').innerHTML = `
+          <span>Duration: ${secondsElapsed.toFixed(1)}s</span>
+          <span style="color: var(--error)">Failed</span>
+        `;
+        // Show toggle button even if failed
+        const toggleBtn = responseCard.querySelector('.toggle-meta-btn');
+        if (toggleBtn) {
+          toggleBtn.style.display = 'inline-flex';
+        }
+        
+        // Apply global collapse preference
+        const globalCollapse = document.getElementById('globalCollapseLogs').checked;
+        if (globalCollapse) {
+          const meta = responseCard.querySelector('.response-meta');
+          if (meta) meta.style.display = 'none';
+          if (toggleBtn) {
+            toggleBtn.innerHTML = `<i data-lucide="eye" style="width: 12px; height: 12px;"></i><span>Show Logs</span>`;
+          }
+        }
+      })
+      .finally(() => {
+        isExecuting = false;
+        document.getElementById('sendBtn').disabled = false;
+        document.getElementById('promptInput').disabled = false;
+        document.getElementById('promptInput').value = '';
+        document.getElementById('statusIndicator').style.display = 'none';
+        outputArea.scrollTop = outputArea.scrollHeight;
+      });
+    }
+
+    window.loadConversationHistory = function() {
+      const convId = document.getElementById('conversationIdInput').value.trim();
+      if (!convId) {
+        alert('Please enter a Conversation ID first.');
+        return;
+      }
+      
+      // Check if conversation is already loaded
+      const existingCard = document.querySelector(`.response-card[data-conversation-id="${convId}"]`);
+      if (existingCard) {
+        alert('This conversation is already loaded.');
+        existingCard.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+      
+      const loadBtn = document.getElementById('loadConvBtn');
+      loadBtn.disabled = true;
+      const originalHTML = loadBtn.innerHTML;
+      loadBtn.innerHTML = `<span>Loading...</span>`;
+      
+      fetch(`/api/agent/conversation/${encodeURIComponent(convId)}`, {
+        method: 'GET',
+        headers: {
+          'X-Bridge-Secret': secretKey
+        }
+      })
+      .then(res => {
+        if (!res.ok) {
+          return res.json().then(data => { throw new Error(data.error || 'Failed to load conversation') });
+        }
+        return res.json();
+      })
+      .then(data => {
+        renderLoadedConversation(data);
+        const promptText = data.steps && data.steps[0] && data.steps[0].type === 'USER_INPUT' ? data.steps[0].content : `Session ${data.conversationId.substring(0, 8)}`;
+        saveToHistory(promptText, data.conversationId);
+      })
+      .catch(err => {
+        alert('Error loading conversation: ' + err.message);
+      })
+      .finally(() => {
+        loadBtn.disabled = false;
+        loadBtn.innerHTML = originalHTML;
+        lucide.createIcons();
+      });
+    };
+
+    function renderLoadedConversation(data) {
+      const outputArea = document.getElementById('outputArea');
+      
+      // Clean up previous "No Active Task" state if needed
+      const emptyState = document.getElementById('emptyState');
+      if (emptyState) {
+        emptyState.remove();
+      }
+      
+      const responseCard = document.createElement('div');
+      responseCard.className = 'response-card';
+      responseCard.setAttribute('data-conversation-id', data.conversationId);
+      responseCard.style.marginBottom = '1.5rem';
+      
+      responseCard.innerHTML = `
+        <div class="response-header">
+          <div style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            <span class="response-badge" style="background-color: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2);">
+              <i data-lucide="history" style="width: 12px; height: 12px;"></i>
+              <span>Loaded Session</span>
+            </span>
+            <span class="prompt-preview" style="font-weight: 600; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">"${data.conversationId}"</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0;">
+            <div class="response-meta">
+              <span>Conv ID: ${data.conversationId}</span>
+              <span>Status: Loaded</span>
+              ${data.tokens ? `
+                <span style="display: inline-flex; align-items: center; gap: 0.25rem; background: rgba(16, 185, 129, 0.08); color: var(--success); padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; border: 1px solid rgba(16, 185, 129, 0.15);">
+                  <i data-lucide="cpu" style="width: 12px; height: 12px;"></i>
+                  <span>${data.tokens.total} tokens (In: ${data.tokens.input} | Out: ${data.tokens.output} | Tool: ${data.tokens.tool})</span>
+                </span>
+              ` : ''}
+            </div>
+            <button class="toggle-meta-btn" style="background: transparent; border: 1px solid var(--border); color: var(--text-muted); border-radius: 6px; padding: 0.25rem 0.5rem; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; transition: all 0.2s;" onclick="toggleCardMetadata(this)">
+              <i data-lucide="eye-off" style="width: 12px; height: 12px;"></i>
+              <span>Hide Logs</span>
+            </button>
+          </div>
+        </div>
+        <div class="markdown-body"></div>
+      `;
+      
+      outputArea.appendChild(responseCard);
+      
+      const mdDiv = responseCard.querySelector('.markdown-body');
+      mdDiv.innerHTML = marked.parse(data.output || '*No output retrieved*');
+      
+      // Apply code highlight
+      mdDiv.querySelectorAll('pre code').forEach((el) => {
+        hljs.highlightElement(el);
+      });
+
+      // Render steps trajectory if present
+      if (data.steps && data.steps.length > 0) {
+        const stepsContainer = document.createElement('div');
+        stepsContainer.className = 'steps-trajectory';
+        stepsContainer.style.marginTop = '1.5rem';
+        stepsContainer.style.borderTop = '1px dashed var(--border)';
+        stepsContainer.style.paddingTop = '1rem';
+        
+        let stepsHTML = `
+          <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between; width: 100%;">
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <i data-lucide="git-commit" style="width: 14px; height: 14px;"></i>
+              <span>Agent Trajectory (${data.steps.length} Steps)</span>
+            </div>
+            <button class="toggle-trajectory-btn" style="background: transparent; border: 1px solid var(--border); color: var(--text-muted); font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 0.2rem; padding: 0.2rem 0.4rem; border-radius: 4px; transition: background 0.2s;" onclick="toggleTrajectory(this)">
+              <i data-lucide="chevron-up" style="width: 12px; height: 12px;"></i>
+              <span>Hide</span>
+            </button>
+          </div>
+          <div class="steps-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
+        `;
+        
+        data.steps.forEach(step => {
+          let icon = 'info';
+          let badgeColor = 'rgba(255, 255, 255, 0.05)';
+          let textColor = 'var(--text-muted)';
+          
+          if (step.type === 'USER_INPUT') {
+            icon = 'user';
+            badgeColor = 'rgba(6, 182, 212, 0.1)';
+            textColor = 'var(--accent)';
+          } else if (step.type === 'PLANNER_RESPONSE') {
+            icon = 'brain';
+            badgeColor = 'rgba(139, 92, 246, 0.1)';
+            textColor = 'var(--primary)';
+          } else if (step.type.includes('SEARCH') || step.type.includes('GREP') || step.type.includes('VIEW_FILE')) {
+            icon = 'search';
+            badgeColor = 'rgba(16, 185, 129, 0.1)';
+            textColor = 'var(--success)';
+          } else if (step.type.includes('RUN_COMMAND') || step.type.includes('COMMAND')) {
+            icon = 'terminal';
+            badgeColor = 'rgba(239, 68, 68, 0.1)';
+            textColor = 'var(--error)';
+          }
+
+          let stepDetails = '';
+          if (step.tool_calls && step.tool_calls.length > 0) {
+            stepDetails = step.tool_calls.map(tc => {
+              const action = tc.args && tc.args.toolAction ? tc.args.toolAction.replace(/"/g, '') : `Calling ${tc.name}`;
+              const argsStr = tc.args ? JSON.stringify(tc.args, null, 2) : '';
+              const hasArgs = argsStr.length > 0;
+              
+              return `
+                <div class="tool-call-box" style="margin-top: 0.25rem;">
+                  <div style="font-family: monospace; font-size: 0.8rem; background: #0c0c0e; border: 1px solid var(--border); padding: 0.4rem 0.6rem; border-radius: 4px; color: #a78bfa; display: flex; justify-content: space-between; align-items: center; ${hasArgs ? 'cursor: pointer;' : ''}" ${hasArgs ? 'onclick="toggleToolArgs(this)"' : ''}>
+                    <span>⚡ ${action}</span>
+                    ${hasArgs ? '<span style="font-size: 0.65rem; color: var(--primary); text-decoration: underline; font-weight: 500;">Details</span>' : ''}
+                  </div>
+                  ${hasArgs ? `<pre class="tool-args-pre" style="display: none; font-size: 0.75rem; background: #050507; border: 1px solid var(--border); border-top: none; padding: 0.5rem; margin: 0; border-radius: 0 0 4px 4px; overflow-x: auto; color: #818cf8;">${argsStr}</pre>` : ''}
+                </div>
+              `;
+            }).join('');
+          } else if (step.content) {
+            const needsTruncation = step.content.length > 150;
+            if (needsTruncation) {
+              const preview = step.content.substring(0, 150) + '...';
+              stepDetails = `
+                <div class="step-content-box" style="margin-top: 0.25rem; cursor: pointer;" onclick="toggleStepContent(this)">
+                  <div class="preview-text" style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; background: rgba(0,0,0,0.1); padding: 0.4rem 0.6rem; border-radius: 4px;">
+                    ${preview}
+                    <span style="display: block; font-size: 0.65rem; color: var(--primary); text-decoration: underline; margin-top: 0.2rem; font-style: normal; font-weight: 600;">Show more</span>
+                  </div>
+                  <div class="full-text" style="display: none; font-size: 0.8rem; color: var(--text); background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 0.6rem 0.8rem; border-radius: 4px; white-space: pre-wrap; font-family: monospace; line-height: 1.4;">${step.content}<span style="display: block; font-size: 0.65rem; color: var(--primary); text-decoration: underline; margin-top: 0.4rem; font-style: normal; font-weight: 600;">Show less</span></div>
+                </div>
+              `;
+            } else {
+              stepDetails = `<div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; background: rgba(0,0,0,0.1); padding: 0.4rem 0.6rem; border-radius: 4px; margin-top: 0.25rem; white-space: pre-wrap;">${step.content}</div>`;
+            }
+          }
+
+          const stepTokenHTML = step.tokens ? `
+            <span style="display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 0.1rem 0.3rem; border-radius: 4px; font-size: 0.65rem; color: var(--text-muted);">
+              <i data-lucide="cpu" style="width: 8px; height: 8px;"></i>
+              <span>${step.tokens} tkn</span>
+            </span>
+          ` : '';
+
+          stepsHTML += `
+            <div class="step-row" style="background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem 0.8rem;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">#${step.step_index}</span>
+                  <span style="display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.15rem 0.4rem; border-radius: 4px; background: ${badgeColor}; color: ${textColor}; font-size: 0.7rem; font-weight: 600; text-transform: uppercase;">
+                    <i data-lucide="${icon}" style="width: 10px; height: 10px;"></i>
+                    <span>${step.type}</span>
+                  </span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.4rem;">
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">${new Date(step.created_at).toLocaleTimeString()}</span>
+                  ${stepTokenHTML}
+                </div>
+              </div>
+              ${stepDetails}
+            </div>
+          `;
+        });
+        
+        stepsHTML += `</div>`;
+        stepsContainer.innerHTML = stepsHTML;
+        responseCard.appendChild(stepsContainer);
+      }
+      
+      // Apply global collapse preference
+      const globalCollapse = document.getElementById('globalCollapseLogs').checked;
+      if (globalCollapse) {
+        const meta = responseCard.querySelector('.response-meta');
+        const trajectory = responseCard.querySelector('.steps-trajectory');
+        const toggleBtn = responseCard.querySelector('.toggle-meta-btn');
+        if (meta) meta.style.display = 'none';
+        if (trajectory) trajectory.style.display = 'none';
+        if (toggleBtn) {
+          toggleBtn.innerHTML = `<i data-lucide="eye" style="width: 12px; height: 12px;"></i><span>Show Logs</span>`;
+        }
+      }
+      
+      lucide.createIcons();
+      outputArea.scrollTop = outputArea.scrollHeight;
+    }
+
+    window.toggleCardMetadata = function(btn) {
+      const card = btn.closest('.response-card');
+      const meta = card.querySelector('.response-meta');
+      const trajectory = card.querySelector('.steps-trajectory');
+      
+      const isHidden = meta.style.display === 'none';
+      if (isHidden) {
+        meta.style.display = 'flex';
+        if (trajectory) trajectory.style.display = 'block';
+        btn.innerHTML = `<i data-lucide="eye-off" style="width: 12px; height: 12px;"></i><span>Hide Logs</span>`;
+      } else {
+        meta.style.display = 'none';
+        if (trajectory) trajectory.style.display = 'none';
+        btn.innerHTML = `<i data-lucide="eye" style="width: 12px; height: 12px;"></i><span>Show Logs</span>`;
+      }
+    };
+
+    window.handleGlobalCollapseToggle = function(collapse) {
+      localStorage.setItem('agy_global_collapse_logs', collapse ? 'true' : 'false');
+      
+      const cards = document.querySelectorAll('.response-card');
+      cards.forEach(card => {
+        const meta = card.querySelector('.response-meta');
+        const trajectory = card.querySelector('.steps-trajectory');
+        const toggleBtn = card.querySelector('.toggle-meta-btn');
+        if (!toggleBtn) return;
+        
+        if (collapse) {
+          if (meta) meta.style.display = 'none';
+          if (trajectory) trajectory.style.display = 'none';
+          toggleBtn.innerHTML = `<i data-lucide="eye" style="width: 12px; height: 12px;"></i><span>Show Logs</span>`;
+        } else {
+          if (meta) meta.style.display = 'flex';
+          if (trajectory) trajectory.style.display = 'block';
+          toggleBtn.innerHTML = `<i data-lucide="eye-off" style="width: 12px; height: 12px;"></i><span>Hide Logs</span>`;
+        }
+      });
+      lucide.createIcons();
+    };
+
+    window.toggleTrajectory = function(btn) {
+      const list = btn.closest('.steps-trajectory').querySelector('.steps-list');
+      
+      const isHidden = list.style.display === 'none';
+      if (isHidden) {
+        list.style.display = 'flex';
+        btn.innerHTML = `<i data-lucide="chevron-up" style="width: 12px; height: 12px;"></i><span>Hide</span>`;
+      } else {
+        list.style.display = 'none';
+        btn.innerHTML = `<i data-lucide="chevron-down" style="width: 12px; height: 12px;"></i><span>Show</span>`;
+      }
+      lucide.createIcons();
+    };
+
+    window.toggleStepContent = function(el) {
+      const preview = el.querySelector('.preview-text');
+      const full = el.querySelector('.full-text');
+      if (full.style.display === 'none') {
+        full.style.display = 'block';
+        preview.style.display = 'none';
+      } else {
+        full.style.display = 'none';
+        preview.style.display = 'block';
+      }
+    };
+
+    window.toggleToolArgs = function(el) {
+      const pre = el.nextElementSibling;
+      if (pre.style.display === 'none') {
+        pre.style.display = 'block';
+        el.style.borderRadius = '4px 4px 0 0';
+      } else {
+        pre.style.display = 'none';
+        el.style.borderRadius = '4px';
+      }
+    };
+
+    window.loadRecentRun = function(convId, prompt) {
+      if (convId) {
+        document.getElementById('conversationIdInput').value = convId;
+        loadConversationHistory();
+      } else {
+        loadPrompt(prompt);
+      }
+    };
+
+    function saveToHistory(prompt, conversationId) {
+      // Avoid duplicates in recent runs
+      recentRuns = recentRuns.filter(run => run.conversationId !== conversationId);
+      recentRuns.unshift({ prompt, conversationId, date: new Date().toLocaleTimeString() });
+      if (recentRuns.length > 5) recentRuns.pop();
+      localStorage.setItem('agy_recent_runs', JSON.stringify(recentRuns));
+      updateHistoryList();
+    }
+
+    function updateHistoryList() {
+      const list = document.getElementById('historyList');
+      if (recentRuns.length === 0) {
+        list.innerHTML = `<div class="text-muted" style="font-size: 0.8rem; font-style: italic;">No recent runs</div>`;
+        return;
+      }
+      list.innerHTML = recentRuns.map(run => `
+        <div class="history-item" onclick="loadRecentRun('${run.conversationId || ''}', '${run.prompt.replace(/'/g, "\\'")}')" title="Click to load this conversation: ${run.prompt}">
+          <strong>${run.date}</strong>: ${run.prompt}
+        </div>
+      `).join('');
+    }
+
+    function updateModelQuotas() {
+      if (!secretKey) return;
+      
+      fetch('/api/model-quota', {
+        headers: {
+          'X-Bridge-Secret': secretKey
+        }
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch quota');
+        return res.json();
+      })
+      .then(data => {
+        if (data.success && data.quotas) {
+          const container = document.getElementById('modelQuotaContainer');
+          if (!container) return;
+          
+          container.innerHTML = data.quotas.map(item => {
+            let segmentsHTML = '';
+            for (let i = 0; i < 4; i++) {
+              const filled = (i * 25) < item.remainingPct;
+              const bg = filled ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.08)';
+              segmentsHTML += `<div style="flex: 1; height: 3px; border-radius: 1.5px; background: ${bg}; transition: background 0.3s;"></div>`;
+            }
+            
+            return `
+              <div style="display: flex; flex-direction: column; width: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                  <span style="font-size: 0.8rem; font-weight: 500; color: var(--text);">${item.name}</span>
+                  <span style="font-size: 0.65rem; color: var(--text-muted);">${item.refreshText}</span>
+                </div>
+                <div style="display: flex; gap: 4px; margin-top: 0.35rem; width: 100%;">
+                  ${segmentsHTML}
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      })
+      .catch(err => {
+        console.error('Error fetching model quotas:', err);
+      });
+    }
+
+    function loadPrompt(text) {
+      document.getElementById('promptInput').value = text;
+      document.getElementById('promptInput').focus();
+    }
+  </script>
+</body>
+</html>

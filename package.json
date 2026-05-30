@@ -1,0 +1,16 @@
+{
+  "name": "agy-bridge",
+  "version": "1.0.0",
+  "description": "Integration bridge for Antigravity CLI (agy)",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start:api": "node server.js",
+    "start:mcp": "node mcp_server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.1",
+    "dotenv": "^17.4.2",
+    "express": "^4.21.2"
+  }
+}
