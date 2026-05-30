@@ -1407,14 +1407,31 @@
       }
     };
 
-    window.loadRecentRun = function(convId, prompt) {
-      if (convId) {
-        document.getElementById('conversationIdInput').value = convId;
-        loadConversationHistory();
-      } else {
-        loadPrompt(prompt);
-      }
-    };
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function bindHistoryClicks() {
+      const items = document.querySelectorAll('.history-item');
+      items.forEach(item => {
+        item.addEventListener('click', () => {
+          const convId = item.getAttribute('data-conv-id');
+          if (convId) {
+            document.getElementById('conversationIdInput').value = convId;
+            loadConversationHistory();
+          } else {
+            const promptText = item.getAttribute('data-prompt') || '';
+            loadPrompt(promptText);
+          }
+        });
+      });
+    }
 
     function saveToHistory(prompt, conversationId) {
       // Avoid duplicates in recent runs
@@ -1444,10 +1461,11 @@
       .then(data => {
         if (data.success && data.conversations && data.conversations.length > 0) {
           list.innerHTML = data.conversations.map(run => `
-            <div class="history-item" onclick="loadRecentRun('${run.conversationId}', '${run.prompt.replace(/'/g, "\\'")}')" title="Click to load this conversation: ${run.prompt}">
-              <strong>${run.date}</strong>: ${run.prompt}
+            <div class="history-item" data-conv-id="${run.conversationId}" data-prompt="${escapeHtml(run.prompt)}" title="Click to load this conversation">
+              <strong>${run.date}</strong>: ${escapeHtml(run.prompt)}
             </div>
           `).join('');
+          bindHistoryClicks();
         } else {
           renderLocalHistory(list);
         }
@@ -1463,10 +1481,11 @@
         return;
       }
       list.innerHTML = recentRuns.map(run => `
-        <div class="history-item" onclick="loadRecentRun('${run.conversationId || ''}', '${run.prompt.replace(/'/g, "\\'")}')" title="Click to load this conversation: ${run.prompt}">
-          <strong>${run.date}</strong>: ${run.prompt}
+        <div class="history-item" data-conv-id="${run.conversationId || ''}" data-prompt="${escapeHtml(run.prompt)}" title="Click to load this conversation">
+          <strong>${run.date}</strong>: ${escapeHtml(run.prompt)}
         </div>
       `).join('');
+      bindHistoryClicks();
     }
 
     function updateModelQuotas() {
