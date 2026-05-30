@@ -680,6 +680,11 @@
                 <span>Load</span>
               </button>
             </div>
+            <!-- Session Stats -->
+            <div id="sessionStats" style="display: none; align-items: center; gap: 0.4rem; margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted); background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); padding: 0.4rem 0.6rem; border-radius: 6px;">
+              <i data-lucide="cpu" style="width: 12px; height: 12px; color: var(--success);"></i>
+              <span>Session Total Tokens: <strong id="sessionTokensCount" style="color: var(--success);">0</strong></span>
+            </div>
           </div>
         </div>
 
@@ -932,6 +937,7 @@
 
         if (data.conversationId) {
           responseCard.setAttribute('data-conversation-id', data.conversationId);
+          document.getElementById('conversationIdInput').value = data.conversationId;
         }
 
         // Show the toggle logs button
@@ -1069,6 +1075,7 @@
 
         // Save to history
         saveToHistory(prompt, data.conversationId);
+        updateSessionStats(data.tokens);
       })
       .catch(err => {
         clearInterval(timerInterval);
@@ -1141,6 +1148,7 @@
         renderLoadedConversation(data);
         const promptText = data.steps && data.steps[0] && data.steps[0].type === 'USER_INPUT' ? data.steps[0].content : `Session ${data.conversationId.substring(0, 8)}`;
         saveToHistory(promptText, data.conversationId);
+        updateSessionStats(data.tokens);
       })
       .catch(err => {
         alert('Error loading conversation: ' + err.message);
@@ -1415,6 +1423,23 @@
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
     }
+
+    function updateSessionStats(tokens) {
+      const statsDiv = document.getElementById('sessionStats');
+      const tokensCount = document.getElementById('sessionTokensCount');
+      if (tokens && typeof tokens.total === 'number') {
+        tokensCount.textContent = tokens.total.toLocaleString();
+        statsDiv.style.display = 'flex';
+      } else {
+        statsDiv.style.display = 'none';
+      }
+    }
+
+    document.getElementById('conversationIdInput').addEventListener('input', (e) => {
+      if (!e.target.value.trim()) {
+        updateSessionStats(null);
+      }
+    });
 
     function cleanPrompt(prompt) {
       if (!prompt) return '';
