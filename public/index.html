@@ -548,6 +548,7 @@
       white-space: nowrap;
       overflow: hidden;
       transition: all 0.2s ease;
+      flex-shrink: 0;
     }
 
     .history-item:hover {
@@ -1150,12 +1151,7 @@
 
     function renderLoadedConversation(data) {
       const outputArea = document.getElementById('outputArea');
-      
-      // Clean up previous "No Active Task" state if needed
-      const emptyState = document.getElementById('emptyState');
-      if (emptyState) {
-        emptyState.remove();
-      }
+      outputArea.innerHTML = ''; // Clear previous conversations/tasks
       
       const responseCard = document.createElement('div');
       responseCard.className = 'response-card';
@@ -1417,6 +1413,20 @@
         .replace(/'/g, "&#039;");
     }
 
+    function cleanPrompt(prompt) {
+      if (!prompt) return '';
+      // Extract from <USER_REQUEST> tag if present
+      const match = prompt.match(/<USER_REQUEST>([\s\S]*?)<\/USER_REQUEST>/);
+      let text = match ? match[1].trim() : prompt.trim();
+      // Replace multiple spaces and newlines with a single space
+      text = text.replace(/\s+/g, ' ');
+      // Truncate to keep the sidebar neat
+      if (text.length > 32) {
+        return text.substring(0, 32) + '...';
+      }
+      return text;
+    }
+
     function bindHistoryClicks() {
       const items = document.querySelectorAll('.history-item');
       items.forEach(item => {
@@ -1461,8 +1471,8 @@
       .then(data => {
         if (data.success && data.conversations && data.conversations.length > 0) {
           list.innerHTML = data.conversations.map(run => `
-            <div class="history-item" data-conv-id="${run.conversationId}" data-prompt="${escapeHtml(run.prompt)}" title="Click to load this conversation">
-              <strong>${run.date}</strong>: ${escapeHtml(run.prompt)}
+            <div class="history-item" data-conv-id="${run.conversationId}" data-prompt="${escapeHtml(run.prompt)}" title="Click to load: ${escapeHtml(run.prompt.substring(0, 120))}${run.prompt.length > 120 ? '...' : ''}">
+              <strong>${run.date}</strong>: ${escapeHtml(cleanPrompt(run.prompt))}
             </div>
           `).join('');
           bindHistoryClicks();
@@ -1481,8 +1491,8 @@
         return;
       }
       list.innerHTML = recentRuns.map(run => `
-        <div class="history-item" data-conv-id="${run.conversationId || ''}" data-prompt="${escapeHtml(run.prompt)}" title="Click to load this conversation">
-          <strong>${run.date}</strong>: ${escapeHtml(run.prompt)}
+        <div class="history-item" data-conv-id="${run.conversationId || ''}" data-prompt="${escapeHtml(run.prompt)}" title="Click to load: ${escapeHtml(run.prompt.substring(0, 120))}${run.prompt.length > 120 ? '...' : ''}">
+          <strong>${run.date}</strong>: ${escapeHtml(cleanPrompt(run.prompt))}
         </div>
       `).join('');
       bindHistoryClicks();
