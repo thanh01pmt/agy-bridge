@@ -233,9 +233,32 @@
       overflow: hidden;
     }
 
+    /* Right Analytics Panel */
+    .analytics-panel {
+      width: 320px;
+      background-color: var(--bg-card);
+      border-left: 1px solid var(--border);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      overflow-y: auto;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      flex-shrink: 0;
+    }
+
+    .analytics-panel.collapsed {
+      width: 0;
+      padding: 0;
+      border-left: 1px solid transparent;
+      overflow: hidden;
+    }
+
     /* Sidebar / Configuration */
     .sidebar {
       width: 320px;
+      min-width: 320px;
+      flex-shrink: 0;
       background-color: var(--bg-card);
       border-right: 1px solid var(--border);
       padding: 1.5rem;
@@ -591,10 +614,16 @@
         </div>
         <span class="header-title">Antigravity Playground</span>
       </div>
-      <button onclick="handleLogout()" class="logout-btn">
-        <i data-lucide="log-out" style="width: 14px; height: 14px;"></i>
-        <span>Logout</span>
-      </button>
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <button id="toggleAnalyticsBtn" onclick="toggleAnalyticsPanel()" class="logout-btn" style="color: var(--success); border-color: rgba(16, 185, 129, 0.2); background-color: rgba(16, 185, 129, 0.02);">
+          <i data-lucide="pie-chart" style="width: 14px; height: 14px;"></i>
+          <span>Analytics</span>
+        </button>
+        <button onclick="handleLogout()" class="logout-btn">
+          <i data-lucide="log-out" style="width: 14px; height: 14px;"></i>
+          <span>Logout</span>
+        </button>
+      </div>
     </div>
 
     <div class="workspace">
@@ -725,6 +754,90 @@
           </div>
         </div>
       </div>
+
+      <!-- Right Analytics Panel -->
+      <div class="analytics-panel collapsed" id="analyticsPanel">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div class="sidebar-section-title" style="margin-bottom: 0;">
+            <i data-lucide="pie-chart" style="width: 14px; height: 14px;"></i>
+            <span>Token Analytics</span>
+          </div>
+          <button onclick="toggleAnalyticsPanel()" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center;">
+            <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+          </button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 1rem; background: rgba(0,0,0,0.15); border-radius: 8px; border: 1px solid var(--border);">
+          <div id="donutChart" style="width: 140px; height: 140px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: background 0.3s ease;">
+            <div style="width: 90px; height: 90px; border-radius: 50%; background: var(--bg-card); display: flex; flex-direction: column; align-items: center; justify-content: center; position: absolute; z-index: 2;">
+              <span style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Total</span>
+              <span id="donutTotal" style="font-size: 1.1rem; font-weight: 700; color: var(--text);">0</span>
+            </div>
+          </div>
+          
+          <!-- Legends -->
+          <div style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%; font-size: 0.8rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--primary);"></span>
+                <span>Input</span>
+              </div>
+              <span id="donutInputVal" style="font-weight: 600;">0 (0%)</span>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--success);"></span>
+                <span>Output</span>
+              </div>
+              <span id="donutOutputVal" style="font-weight: 600;">0 (0%)</span>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: #a78bfa;"></span>
+                <span>Tool</span>
+              </div>
+              <span id="donutToolVal" style="font-weight: 600;">0 (0%)</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="sidebar-section-title" style="margin-top: 0.5rem;">
+            <i data-lucide="dollar-sign" style="width: 14px; height: 14px;"></i>
+            <span>Cost Estimation</span>
+          </div>
+          <div class="config-card" style="padding: 0.75rem; font-size: 0.8rem; display: flex; flex-direction: column; gap: 0.5rem;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted);">Gemini 1.5 Flash:</span>
+              <span id="costFlash" style="font-weight: 600; color: var(--success); font-family: monospace;">$0.000000</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 0.5rem;">
+              <span style="color: var(--text-muted);">Gemini 1.5 Pro:</span>
+              <span id="costPro" style="font-weight: 600; color: var(--accent); font-family: monospace;">$0.000000</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="sidebar-section-title" style="margin-top: 0.5rem;">
+            <i data-lucide="list-ordered" style="width: 14px; height: 14px;"></i>
+            <span>Top Resource Steps</span>
+          </div>
+          <div id="topStepsList" style="display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.75rem;">
+            <div style="text-align: center; color: var(--text-muted); font-style: italic; padding: 0.5rem 0;">No active session</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="sidebar-section-title" style="margin-top: 0.5rem;">
+            <i data-lucide="lightbulb" style="width: 14px; height: 14px;"></i>
+            <span>Optimization Tips</span>
+          </div>
+          <div id="optimizationTips" class="config-card" style="padding: 0.75rem; font-size: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; line-height: 1.4; color: var(--text-muted);">
+            No active session logs to analyze.
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -773,6 +886,26 @@
       const savedCollapse = localStorage.getItem('agy_global_collapse_logs') === 'true';
       document.getElementById('globalCollapseLogs').checked = savedCollapse;
 
+      // Initialize analytics panel collapse state
+      const analyticsCollapsed = localStorage.getItem('agy_analytics_collapsed') !== 'false';
+      const panel = document.getElementById('analyticsPanel');
+      const btn = document.getElementById('toggleAnalyticsBtn');
+      if (analyticsCollapsed) {
+        panel.classList.add('collapsed');
+        if (btn) {
+          btn.classList.remove('active');
+          btn.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+          btn.style.backgroundColor = 'rgba(16, 185, 129, 0.02)';
+        }
+      } else {
+        panel.classList.remove('collapsed');
+        if (btn) {
+          btn.classList.add('active');
+          btn.style.borderColor = 'var(--success)';
+          btn.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+        }
+      }
+
       updateHistoryList();
       updateModelQuotas();
       if (quotaInterval) clearInterval(quotaInterval);
@@ -818,6 +951,7 @@
         clearInterval(quotaInterval);
         quotaInterval = null;
       }
+      handleActiveSessionData(null);
       showAuthScreen();
     }
 
@@ -1075,7 +1209,7 @@
 
         // Save to history
         saveToHistory(prompt, data.conversationId);
-        updateSessionStats(data.tokens);
+        handleActiveSessionData(data);
       })
       .catch(err => {
         clearInterval(timerInterval);
@@ -1148,7 +1282,7 @@
         renderLoadedConversation(data);
         const promptText = data.steps && data.steps[0] && data.steps[0].type === 'USER_INPUT' ? data.steps[0].content : `Session ${data.conversationId.substring(0, 8)}`;
         saveToHistory(promptText, data.conversationId);
-        updateSessionStats(data.tokens);
+        handleActiveSessionData(data);
       })
       .catch(err => {
         alert('Error loading conversation: ' + err.message);
@@ -1435,9 +1569,199 @@
       }
     }
 
+    function toggleAnalyticsPanel() {
+      const panel = document.getElementById('analyticsPanel');
+      const isCollapsed = panel.classList.toggle('collapsed');
+      localStorage.setItem('agy_analytics_collapsed', isCollapsed ? 'true' : 'false');
+      
+      const btn = document.getElementById('toggleAnalyticsBtn');
+      if (btn) {
+        if (isCollapsed) {
+          btn.classList.remove('active');
+          btn.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+          btn.style.backgroundColor = 'rgba(16, 185, 129, 0.02)';
+        } else {
+          btn.classList.add('active');
+          btn.style.borderColor = 'var(--success)';
+          btn.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+        }
+      }
+    }
+
+    function updateDonutChart(input, output, tool) {
+      const total = input + output + tool;
+      document.getElementById('donutTotal').textContent = total.toLocaleString();
+      
+      const chartEl = document.getElementById('donutChart');
+      if (total === 0) {
+        chartEl.style.background = 'var(--border)';
+        document.getElementById('donutInputVal').textContent = '0 (0%)';
+        document.getElementById('donutOutputVal').textContent = '0 (0%)';
+        document.getElementById('donutToolVal').textContent = '0 (0%)';
+        return;
+      }
+      
+      const inputPct = (input / total) * 100;
+      const outputPct = (output / total) * 100;
+      const toolPct = (tool / total) * 100;
+      
+      document.getElementById('donutInputVal').textContent = `${input.toLocaleString()} (${inputPct.toFixed(1)}%)`;
+      document.getElementById('donutOutputVal').textContent = `${output.toLocaleString()} (${outputPct.toFixed(1)}%)`;
+      document.getElementById('donutToolVal').textContent = `${tool.toLocaleString()} (${toolPct.toFixed(1)}%)`;
+      
+      // Calculate conic gradient angles
+      const inputAngle = inputPct * 3.6;
+      const outputAngle = outputPct * 3.6;
+      
+      const grad = `conic-gradient(
+        var(--primary) 0deg ${inputAngle}deg,
+        var(--success) ${inputAngle}deg ${inputAngle + outputAngle}deg,
+        #a78bfa ${inputAngle + outputAngle}deg 360deg
+      )`;
+      
+      chartEl.style.background = grad;
+    }
+
+    function getEstimatedCost(input, output) {
+      // Gemini 1.5 Flash rates
+      const flashInputCost = (input / 1000000) * 0.075;
+      const flashOutputCost = (output / 1000000) * 0.30;
+      const flashTotal = flashInputCost + flashOutputCost;
+      
+      // Gemini 1.5 Pro rates
+      const proInputCost = (input / 1000000) * 1.25;
+      const proOutputCost = (output / 1000000) * 5.00;
+      const proTotal = proInputCost + proOutputCost;
+      
+      return {
+        flash: flashTotal,
+        pro: proTotal
+      };
+    }
+
+    function updateTopSteps(steps) {
+      const list = document.getElementById('topStepsList');
+      if (!steps || steps.length === 0) {
+        list.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-style: italic; padding: 0.5rem 0;">No active session</div>`;
+        return;
+      }
+      
+      // Sort steps by token usage descending
+      const sortedSteps = [...steps]
+        .filter(s => s.tokens > 0)
+        .sort((a, b) => b.tokens - a.tokens)
+        .slice(0, 4);
+        
+      if (sortedSteps.length === 0) {
+        list.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-style: italic; padding: 0.5rem 0;">No token data per step</div>`;
+        return;
+      }
+      
+      list.innerHTML = sortedSteps.map(step => {
+        let badgeColor = 'rgba(255, 255, 255, 0.05)';
+        let textColor = 'var(--text-muted)';
+        if (step.type === 'USER_INPUT') {
+          badgeColor = 'rgba(6, 182, 212, 0.1)';
+          textColor = 'var(--accent)';
+        } else if (step.type === 'PLANNER_RESPONSE') {
+          badgeColor = 'rgba(139, 92, 246, 0.1)';
+          textColor = 'var(--primary)';
+        } else if (step.type.includes('SEARCH') || step.type.includes('GREP') || step.type.includes('VIEW_FILE')) {
+          badgeColor = 'rgba(16, 185, 129, 0.1)';
+          textColor = 'var(--success)';
+        } else if (step.type.includes('RUN_COMMAND') || step.type.includes('COMMAND')) {
+          badgeColor = 'rgba(239, 68, 68, 0.1)';
+          textColor = 'var(--error)';
+        }
+        
+        // Short preview of content or tool name
+        let label = step.type;
+        if (step.tool_calls && step.tool_calls.length > 0) {
+          label = step.tool_calls[0].name;
+        } else if (step.content) {
+          label = step.content.trim().substring(0, 24) + (step.content.length > 24 ? '...' : '');
+        }
+        
+        return `
+          <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.01); border: 1px solid var(--border); padding: 0.4rem 0.6rem; border-radius: 6px; margin-bottom: 0.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.4rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              <span style="font-weight: 700; color: var(--text-muted);">#${step.step_index}</span>
+              <span style="padding: 0.1rem 0.3rem; border-radius: 4px; background: ${badgeColor}; color: ${textColor}; font-size: 0.65rem; font-weight: 600; text-transform: uppercase;">${step.type.substring(0, 10)}</span>
+              <span style="color: var(--text-muted); font-size: 0.7rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(step.content || '')}">${escapeHtml(label)}</span>
+            </div>
+            <span style="font-weight: 700; color: var(--text); flex-shrink: 0;">${step.tokens.toLocaleString()} tkn</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateOptimizationTips(input, output, tool, steps) {
+      const container = document.getElementById('optimizationTips');
+      if (input + output + tool === 0) {
+        container.innerHTML = 'No active session logs to analyze.';
+        return;
+      }
+      
+      const tips = [];
+      const total = input + output + tool;
+      const toolPct = (tool / total) * 100;
+      const inputPct = (input / total) * 100;
+      
+      if (toolPct > 50) {
+        tips.push(`⚠️ <strong>High Tool Usage (${toolPct.toFixed(0)}%)</strong>: The agent spent a lot of tokens reading large files or running verbose commands. Consider using more targeted queries or specific directories to minimize read operations.`);
+      }
+      if (inputPct > 80 && total > 50000) {
+        tips.push(`💡 <strong>Large Context (${inputPct.toFixed(0)}%)</strong>: Over 80% of tokens are input context. Consider initiating a new conversation if the current agent session has completed its core tasks to save tokens.`);
+      }
+      
+      // Check if there are many steps
+      if (steps && steps.length > 15) {
+        tips.push(`⏳ <strong>Long Trajectory (${steps.length} steps)</strong>: The agent is running a long sequence of tasks. Using <em>Sandbox Mode</em> or providing clearer file guidelines can speed up processing.`);
+      }
+      
+      if (tips.length === 0) {
+        tips.push(`✅ <strong>Token Efficiency OK</strong>: Token distribution looks well-balanced for this task. Keep prompts precise!`);
+      }
+      
+      container.innerHTML = tips.map(tip => `<div style="margin-bottom: 0.4rem;">${tip}</div>`).join('');
+    }
+
+    function refreshAnalytics(data) {
+      if (data && data.tokens) {
+        updateDonutChart(data.tokens.input || 0, data.tokens.output || 0, data.tokens.tool || 0);
+        
+        // Calculate cost
+        const costs = getEstimatedCost(data.tokens.input || 0, data.tokens.output || 0);
+        document.getElementById('costFlash').textContent = `$${costs.flash.toFixed(6)}`;
+        document.getElementById('costPro').textContent = `$${costs.pro.toFixed(6)}`;
+        
+        // Update top resource steps
+        updateTopSteps(data.steps || []);
+        
+        // Update optimization tips
+        updateOptimizationTips(data.tokens.input || 0, data.tokens.output || 0, data.tokens.tool || 0, data.steps || []);
+      } else {
+        updateDonutChart(0, 0, 0);
+        document.getElementById('costFlash').textContent = '$0.000000';
+        document.getElementById('costPro').textContent = '$0.000000';
+        updateTopSteps([]);
+        updateOptimizationTips(0, 0, 0, []);
+      }
+    }
+
+    function handleActiveSessionData(data) {
+      if (data) {
+        updateSessionStats(data.tokens);
+        refreshAnalytics(data);
+      } else {
+        updateSessionStats(null);
+        refreshAnalytics(null);
+      }
+    }
+
     document.getElementById('conversationIdInput').addEventListener('input', (e) => {
       if (!e.target.value.trim()) {
-        updateSessionStats(null);
+        handleActiveSessionData(null);
       }
     });
 
