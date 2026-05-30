@@ -770,7 +770,10 @@
       updateHistoryList();
       updateModelQuotas();
       if (quotaInterval) clearInterval(quotaInterval);
-      quotaInterval = setInterval(updateModelQuotas, 30000);
+      quotaInterval = setInterval(() => {
+        updateModelQuotas();
+        updateHistoryList();
+      }, 30000);
     }
 
     function handleLogin() {
@@ -1424,6 +1427,37 @@
 
     function updateHistoryList() {
       const list = document.getElementById('historyList');
+      if (!secretKey) {
+        renderLocalHistory(list);
+        return;
+      }
+
+      fetch('/api/agent/conversations?limit=10', {
+        headers: {
+          'X-Bridge-Secret': secretKey
+        }
+      })
+      .then(res => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then(data => {
+        if (data.success && data.conversations && data.conversations.length > 0) {
+          list.innerHTML = data.conversations.map(run => `
+            <div class="history-item" onclick="loadRecentRun('${run.conversationId}', '${run.prompt.replace(/'/g, "\\'")}')" title="Click to load this conversation: ${run.prompt}">
+              <strong>${run.date}</strong>: ${run.prompt}
+            </div>
+          `).join('');
+        } else {
+          renderLocalHistory(list);
+        }
+      })
+      .catch(() => {
+        renderLocalHistory(list);
+      });
+    }
+
+    function renderLocalHistory(list) {
       if (recentRuns.length === 0) {
         list.innerHTML = `<div class="text-muted" style="font-size: 0.8rem; font-style: italic;">No recent runs</div>`;
         return;

@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import os from 'os';
 import { fileURLToPath } from 'url';
-import { runAgy, getConversationDetails } from './wrappers/node_wrapper.js';
+import { runAgy, getConversationDetails, listConversations } from './wrappers/node_wrapper.js';
 
 dotenv.config();
 
@@ -71,6 +71,18 @@ app.post('/api/agent', authenticate, async (req, res) => {
       success: false,
       error: err.message
     });
+  }
+});
+
+// GET Endpoint to list recent conversations
+app.get('/api/agent/conversations', authenticate, async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const list = await listConversations(limit);
+    res.json({ success: true, conversations: list });
+  } catch (err) {
+    console.error('[API] Error listing conversations:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 

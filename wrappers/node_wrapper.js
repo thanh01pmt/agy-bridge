@@ -233,6 +233,64 @@ export async function getConversationDetails(conversationId) {
   };
 }
 
+/**
+ * Lists the most recent conversations with their details
+ * @param {number} limit - Maximum number of items to return
+ * @returns {Promise<Array>}
+ */
+export async function listConversations(limit = 10) {
+  const brainDir = await getBrainDir();
+  try {
+    const files = await fs.readdir(brainDir);
+    const dirs = [];
+    for (const file of files) {
+      if (file.startsWith('.')) continue;
+      const fullPath = path.join(brainDir, file);
+      const stat = await fs.stat(fullPath);
+      if (stat.isDirectory()) {
+        dirs.push({ id: file, mtime: stat.mtimeMs });
+      }
+    }
+    
+    dirs.sort((a, b) => b.mtime - a.mtime);
+    const sliced = dirs.slice(0, limit);
+    
+    const results = [];
+    for (const d of sliced) {
+      try {
+        const transcriptPath = path.join(brainDir, d.id, '.system_generated/logs/transcript.jsonl');
+        const data = await fs.readFile(transcriptPath, 'utf8');
+        const lines = data.split('\n').filter(Boolean);
+        let prompt = `Session ${d.id.substring(0, 8)}`;
+        if (lines.length > 0) {
+          const firstStep = JSON.parse(lines[0]);
+          if (firstStep.type === 'USER_INPUT' && firstStep.content) {
+            prompt = firstStep.content;
+          }
+        }
+        results.push({
+          conversationId: d.id,
+          prompt,
+          mtime: d.mtime,
+          date: new Date(d.mtime).toLocaleTimeString()
+        });
+      } catch {
+        results.push({
+          conversationId: d.id,
+          prompt: `Session ${d.id.substring(0, 8)}`,
+          mtime: d.mtime,
+          date: new Date(d.mtime).toLocaleTimeString()
+        });
+      }
+    }
+    return results;
+  } catch (err) {
+    console.error('Error listing conversations:', err);
+    return [];
+  }
+}
+
+
 // If run directly from terminal
 const isDirectRun = process.argv[1] && (
   process.argv[1] === import.meta.filename || 
